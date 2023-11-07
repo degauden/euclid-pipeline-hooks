@@ -1,0 +1,8 @@
+-   id: dependency-version-fixer
+    name: Dependency Version Fixer
+    description: Fixes the version of the used Elements-based projects.
+    entry: dependency-version-fixer
+    language: python
+    # for backward compatibility
+    files: '^(PkgDef|PipScript|PipDef).*$'
+    minimum_pre_commit_version: 0.15.0
