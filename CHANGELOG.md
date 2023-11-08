@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2023-11-08
+
+### Fixed
+- Removed the `type` in the hook definition
+
+
+## [1.0.0] - 2023-11-08
+
+Initial implementation
+
 
 ## [0.0.0] - 2022-06-07
 
