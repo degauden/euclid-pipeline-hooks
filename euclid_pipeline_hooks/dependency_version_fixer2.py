@@ -135,7 +135,8 @@ def _is_selected(entry_path: str, filters: list[str]) -> bool:
 
     if not os.path.isdir(entry_path):
         for f in filters:
-            if re.match(fr'{f}', entry_path):
+            if re.search(fr'{f}', entry_path):
+                print(f'Selected entry: {entry_path}')
                 selected = True
                 break
 
