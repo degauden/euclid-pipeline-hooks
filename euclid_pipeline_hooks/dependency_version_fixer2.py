@@ -9,8 +9,10 @@ from __future__ import annotations
 
 import os
 import re
+import argparse
 
 from git.repo import Repo
+from typing import Sequence
 
 _TXT_PLAIN_VERSION_STYLE = r'(?:\d+)\.(?:\d+)(?:\.(?:\d+))?'
 NAME_AND_VERSION = re.compile(r'(\w+)\s+(%s)' % _TXT_PLAIN_VERSION_STYLE)
@@ -20,7 +22,7 @@ def _normalize_entry(entry: str) -> str:
     return ' '.join(entry.replace('\n', ' ').strip().split())
 
 
-def _filter_comments(input_text: str, comment: str = '#') -> str:
+def _filter_comments(input_text: str, comment: str='#') -> str:
     output_lines = []
 
     for line in input_text.splitlines():
@@ -95,7 +97,7 @@ def _get_projects(content: str) -> list[tuple[str, str]]:
     return projects
 
 
-def _sub(content: str, project_name: str, new_version: str, project_version: str = '') -> str:
+def _sub(content: str, project_name: str, new_version: str, project_version: str='') -> str:
 
     txt_search_project = fr'({project_name})([\n\s]+|/)({_TXT_PLAIN_VERSION_STYLE})'
 
@@ -126,8 +128,36 @@ def _fix_file(filename: str, projects: list[tuple[str, str]]) -> bool:
     return has_changed
 
 
-def main() -> int:
+def _is_selected(entry_path: str, filters: list[str]) -> bool:
+    selected = False
+
+    if not os.path.isdir(entry_path):
+        for f in filters:
+            if re.match(fr"{f}", entry_path):
+                selected = True
+                break
+
+    return selected
+
+
+def main(argv: Sequence[str] | None=None) -> int:
     return_code = 0
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--filter',
+        action='append',
+        default=[],
+        metavar='*|FILTER[,FILTER,...]',
+        help=(
+            'Filter to select files to act on  '
+            'default: %(default)s'
+        ),
+    )
+
+    args = parser.parse_args(argv)
+
+    all_filters = args.filter
 
     # print(f'Current working directory {os.getcwd()}')
 
@@ -140,7 +170,7 @@ def main() -> int:
 
     for entry in repo.commit().tree.traverse():
         entry_path = entry.path
-        if not os.path.isdir(entry.path) and _fix_file(entry_path, projects):
+        if _is_selected(entry_path, all_filters) and _fix_file(entry_path, projects):
             print(f'Fixing {entry_path}')
             return_code = 1
 
