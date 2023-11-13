@@ -139,9 +139,9 @@ def main() -> int:
     repo = Repo(os.getcwd())
 
     for entry in repo.commit().tree.traverse():
-        filename = entry.path
-        if _fix_file(filename, projects):
-            print(f'Fixing {filename}')
+        entry_path = entry.path
+        if not os.path.isdir(entry.path) and _fix_file(entry_path, projects):
+            print(f'Fixing {entry_path}')
             return_code = 1
 
     return return_code
