@@ -131,12 +131,9 @@ def _fix_file(filename: str, projects: list[tuple[str, str]]) -> bool:
 def _is_selected(entry_path: str, filters: list[str]) -> bool:
     selected = False
 
-    print(f'Path entry: {entry_path}')
-
     if not os.path.isdir(entry_path):
         for f in filters:
             if re.search(fr'{f}', entry_path):
-                print(f'Selected entry: {entry_path}')
                 selected = True
                 break
 
@@ -173,7 +170,6 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     for entry in repo.commit().tree.traverse():
         entry_path = entry.path
-        print(f'Using {entry.path}')
         if _is_selected(entry_path, all_filters) and _fix_file(entry_path, projects):
             print(f'Fixing {entry_path}')
             return_code = 1
