@@ -8,8 +8,11 @@
 from __future__ import annotations
 
 import argparse
+import os
 import re
 from typing import Sequence
+
+from git.repo import Repo
 
 _TXT_PLAIN_VERSION_STYLE = r'(?:\d+)\.(?:\d+)(?:\.(?:\d+))?'
 NAME_AND_VERSION = re.compile(r'(\w+)\s+(%s)' % _TXT_PLAIN_VERSION_STYLE)
@@ -125,12 +128,36 @@ def _fix_file(filename: str, projects: list[tuple[str, str]]) -> bool:
     return has_changed
 
 
+def _is_selected(entry_path: str, filters: list[str]) -> bool:
+    selected = False
+
+    if not os.path.isdir(entry_path):
+        for f in filters:
+            if re.search(fr'{f}', entry_path):
+                selected = True
+                break
+
+    return selected
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     return_code = 0
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('filenames', nargs='*', help='Filenames to fix')
+    parser.add_argument(
+        '--filter',
+        action='append',
+        default=[],
+        metavar='*|FILTER[,FILTER,...]',
+        help=(
+            'Filter to select files to act on  '
+            'default: %(default)s'
+        ),
+    )
+
     args = parser.parse_args(argv)
+
+    all_filters = args.filter
 
     # print(f'Current working directory {os.getcwd()}')
 
@@ -139,9 +166,12 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     projects = _get_projects(content)
 
-    for filename in args.filenames:
-        if _fix_file(filename, projects):
-            print(f'Fixing {filename}')
+    repo = Repo(os.getcwd())
+
+    for entry in repo.commit().tree.traverse():
+        entry_path = entry.path
+        if _is_selected(entry_path, all_filters) and _fix_file(entry_path, projects):
+            print(f'Fixing {entry_path}')
             return_code = 1
 
     return return_code
