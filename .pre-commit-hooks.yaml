@@ -10,7 +10,7 @@
     name: Dependency Version Fixer
     description: Fixes the version of the used Elements-based projects.
     entry: dependency-version-fixer2
-    args: [ --filter '(PkgDef|PipScript|PipDef).*$' ] 
+    args: [ --filter '(PkgDef|PipScript|PipDef).*$' ]
     language: python
     # for backward compatibility
     pass_filenames: false
