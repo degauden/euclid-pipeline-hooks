@@ -7,10 +7,10 @@
     files: '(PkgDef|PipScript|PipDef).*$'
     minimum_pre_commit_version: 0.15.0
 -   id: dependency-version-fixer2
-    name: Dependency Version Fixer
+    name: Dependency Version Fixer 2
     description: Fixes the version of the used Elements-based projects.
-    entry: dependency-version-fixer2
-    args: [ --filter '(PkgDef|PipScript|PipDef).*$' ]
+    entry: dependency-version-fixer2 --filter '(PkgDef|PipScript|PipDef).*$'
+#    args: [ --filter '(PkgDef|PipScript|PipDef).*$' ]
     language: python
     # for backward compatibility
     pass_filenames: false
