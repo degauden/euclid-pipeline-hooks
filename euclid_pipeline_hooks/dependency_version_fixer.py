@@ -18,6 +18,9 @@ _TXT_PLAIN_VERSION_STYLE = r'(?:\d+)\.(?:\d+)(?:\.(?:\d+))?'
 _TXT_PROD_VERSION_STYLE = r'(?:\d+)\.(?:\d+)\.(?:\d+)'
 NAME_AND_VERSION = re.compile(r'(\w+)\s+(%s)' % _TXT_PLAIN_VERSION_STYLE)
 
+DEV_CVMFS_ROOT = '/cvmfs/euclid-dev.in2p3.fr'
+PROD_CVMFS_ROOT = '/cvmfs/euclid.in2p3.fr'
+
 
 def _normalize_entry(entry: str) -> str:
     return ' '.join(entry.replace('\n', ' ').strip().split())
@@ -137,8 +140,11 @@ def _fix_file(filename: str, projects: list[tuple[str, str]], with_cvmfs_branch:
     for project, version in projects:
         new_content = _sub(new_content, project, version)
 
-    if with_cvmfs_branch and has_dev_version:
-        ...
+    if with_cvmfs_branch:
+        if has_dev_version:
+            new_content = new_content.replace(PROD_CVMFS_ROOT, DEV_CVMFS_ROOT)
+        else:
+            new_content = new_content.replace(DEV_CVMFS_ROOT, PROD_CVMFS_ROOT)
 
     if content != new_content:
         with open(filename, mode='w') as file_processed:
