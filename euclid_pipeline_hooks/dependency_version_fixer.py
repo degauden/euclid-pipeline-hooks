@@ -15,6 +15,7 @@ from typing import Sequence
 from git.repo import Repo
 
 _TXT_PLAIN_VERSION_STYLE = r'(?:\d+)\.(?:\d+)(?:\.(?:\d+))?'
+_TXT_PROD_VERSION_STYLE = r'(?:\d+)\.(?:\d+)\.(?:\d+)'
 NAME_AND_VERSION = re.compile(r'(\w+)\s+(%s)' % _TXT_PLAIN_VERSION_STYLE)
 
 
@@ -22,7 +23,7 @@ def _normalize_entry(entry: str) -> str:
     return ' '.join(entry.replace('\n', ' ').strip().split())
 
 
-def _filter_comments(input_text: str, comment: str = '#') -> str:
+def _filter_comments(input_text: str, comment: str='#') -> str:
     output_lines = []
 
     for line in input_text.splitlines():
@@ -97,7 +98,7 @@ def _get_projects(content: str) -> list[tuple[str, str]]:
     return projects
 
 
-def _sub(content: str, project_name: str, new_version: str, project_version: str = '') -> str:
+def _sub(content: str, project_name: str, new_version: str, project_version: str='') -> str:
 
     txt_search_project = fr'({project_name})([\n\s]+|/)({_TXT_PLAIN_VERSION_STYLE})'
 
@@ -111,7 +112,23 @@ def _sub(content: str, project_name: str, new_version: str, project_version: str
     return new_content
 
 
-def _fix_file(filename: str, projects: list[tuple[str, str]]) -> bool:
+def _has_dev_version(projects: list[tuple[str, str]]) -> bool:
+    has_dev = False
+
+    prod_version_style = re.compile(_TXT_PROD_VERSION_STYLE)
+
+    for _, version in projects:
+        if not prod_version_style.match(version):
+            has_dev = True
+            break
+
+    if (has_dev):
+        print("One of the projects has a dev version")
+
+    return has_dev
+
+
+def _fix_file(filename: str, projects: list[tuple[str, str]], with_cvmfs_branch: bool) -> bool:
     has_changed = False
     with open(filename) as file_processed:
         content = file_processed.read()
@@ -119,6 +136,9 @@ def _fix_file(filename: str, projects: list[tuple[str, str]]) -> bool:
     new_content = content
     for project, version in projects:
         new_content = _sub(new_content, project, version)
+
+    if with_cvmfs_branch:
+        has_dev_version = _has_dev_version(projects)
 
     if content != new_content:
         with open(filename, mode='w') as file_processed:
@@ -140,7 +160,7 @@ def _is_selected(entry_path: str, filters: list[str]) -> bool:
     return selected
 
 
-def main(argv: Sequence[str] | None = None) -> int:
+def main(argv: Sequence[str] | None=None) -> int:
     return_code = 0
 
     parser = argparse.ArgumentParser()
@@ -151,6 +171,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         metavar='*|FILTER[,FILTER,...]',
         help=(
             'Filter to select files to act on  '
+            'default: %(default)s'
+        ),
+    )
+
+    parser.add_argument(
+        '--with-cvmfs-branch',
+        action='store_true',
+        default=False,
+        help=(
+            'Convert the path to the CVMFS directory if there are prod-only version  '
             'default: %(default)s'
         ),
     )
@@ -170,7 +200,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     for entry in repo.commit().tree.traverse():
         entry_path = entry.path
-        if _is_selected(entry_path, all_filters) and _fix_file(entry_path, projects):
+        if _is_selected(entry_path, all_filters) and _fix_file(entry_path, projects, args.with_cvmfs_branch):
             print(f'Fixing {entry_path}')
             return_code = 1
 
