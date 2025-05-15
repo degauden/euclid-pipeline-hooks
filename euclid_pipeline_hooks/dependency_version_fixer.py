@@ -128,7 +128,7 @@ def _has_dev_version(projects: list[tuple[str, str]]) -> bool:
     return has_dev
 
 
-def _fix_file(filename: str, projects: list[tuple[str, str]], with_cvmfs_branch: bool) -> bool:
+def _fix_file(filename: str, projects: list[tuple[str, str]], with_cvmfs_branch: bool, has_dev_version: bool) -> bool:
     has_changed = False
     with open(filename) as file_processed:
         content = file_processed.read()
@@ -137,8 +137,8 @@ def _fix_file(filename: str, projects: list[tuple[str, str]], with_cvmfs_branch:
     for project, version in projects:
         new_content = _sub(new_content, project, version)
 
-    if with_cvmfs_branch:
-        has_dev_version = _has_dev_version(projects)
+    if with_cvmfs_branch and has_dev_version:
+        ...
 
     if content != new_content:
         with open(filename, mode='w') as file_processed:
@@ -196,11 +196,16 @@ def main(argv: Sequence[str] | None=None) -> int:
 
     projects = _get_projects(content)
 
+    has_dev_version = False
+
+    if args.with_cvmfs_branch:
+        has_dev_version = _has_dev_version(projects)
+
     repo = Repo(os.getcwd())
 
     for entry in repo.commit().tree.traverse():
         entry_path = entry.path
-        if _is_selected(entry_path, all_filters) and _fix_file(entry_path, projects, args.with_cvmfs_branch):
+        if _is_selected(entry_path, all_filters) and _fix_file(entry_path, projects, args.with_cvmfs_branch, has_dev_version):
             print(f'Fixing {entry_path}')
             return_code = 1
 
