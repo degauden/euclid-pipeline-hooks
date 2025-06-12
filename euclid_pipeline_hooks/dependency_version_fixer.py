@@ -26,7 +26,7 @@ def _normalize_entry(entry: str) -> str:
     return ' '.join(entry.replace('\n', ' ').strip().split())
 
 
-def _filter_comments(input_text: str, comment: str='#') -> str:
+def _filter_comments(input_text: str, comment: str = '#') -> str:
     output_lines = []
 
     for line in input_text.splitlines():
@@ -101,7 +101,7 @@ def _get_projects(content: str) -> list[tuple[str, str]]:
     return projects
 
 
-def _sub(content: str, project_name: str, new_version: str, project_version: str='') -> str:
+def _sub(content: str, project_name: str, new_version: str, project_version: str = '') -> str:
 
     txt_search_project = fr'({project_name})([\n\s]+|/)({_TXT_PLAIN_VERSION_STYLE})'
 
@@ -168,7 +168,7 @@ def _is_selected(entry_path: str, filters: list[str]) -> bool:
     return selected
 
 
-def main(argv: Sequence[str] | None=None) -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     return_code = 0
 
     parser = argparse.ArgumentParser()
